@@ -1,0 +1,19 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "MediBot Backend",
+      "runtimeExecutable": "python",
+      "runtimeArgs": ["backend/main.py"],
+      "port": 8000
+    },
+    {
+      "name": "MediBot Frontend",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "dev"],
+      "cwd": "frontend",
+      "port": 3000,
+      "url": "http://localhost:3000"
+    }
+  ]
+}

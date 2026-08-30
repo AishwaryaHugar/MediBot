@@ -13,18 +13,18 @@ import re
 import sqlite3
 import logging
 
-import anthropic
+from groq import Groq
 
-from config import ANTHROPIC_API_KEY, DATABASE_PATH, LLM_MODEL
+from config import GROQ_API_KEY, DATABASE_PATH, LLM_MODEL
 
 logger = logging.getLogger("sql_rag")
-_client: anthropic.Anthropic | None = None
+_client: Groq | None = None
 
 
-def get_client() -> anthropic.Anthropic:
+def get_client() -> Groq:
     global _client
     if _client is None:
-        _client = anthropic.Anthropic(api_key=ANTHROPIC_API_KEY)
+        _client = Groq(api_key=GROQ_API_KEY)
     return _client
 
 
@@ -73,12 +73,12 @@ def sql_rag_chain(question: str) -> str:
         f'Write a single SQL SELECT query to answer: "{question}"\n\n'
         "Return ONLY the SQL query — no explanation, no markdown fences."
     )
-    sql_resp = client.messages.create(
+    sql_resp = client.chat.completions.create(
         model=LLM_MODEL,
         max_tokens=512,
         messages=[{"role": "user", "content": sql_prompt}],
     )
-    raw_sql = sql_resp.content[0].text
+    raw_sql = sql_resp.choices[0].message.content
     clean = clean_sql(raw_sql)
     logger.info("sql_rag | generated_sql=%s", clean)
 
@@ -92,9 +92,9 @@ def sql_rag_chain(question: str) -> str:
         "Provide a clear, concise natural-language answer based on these results. "
         "Be specific with numbers and dates."
     )
-    answer_resp = client.messages.create(
+    answer_resp = client.chat.completions.create(
         model=LLM_MODEL,
         max_tokens=512,
         messages=[{"role": "user", "content": answer_prompt}],
     )
-    return answer_resp.content[0].text
+    return answer_resp.choices[0].message.content

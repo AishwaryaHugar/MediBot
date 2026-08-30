@@ -6,9 +6,9 @@ Chat orchestration (FR-20 → FR-22):
 """
 import logging
 
-import anthropic
+from groq import Groq
 
-from config import ANTHROPIC_API_KEY, LLM_MODEL
+from config import GROQ_API_KEY, LLM_MODEL
 from models import ChatResponse, Source
 from rbac import format_rbac_denial, is_sql_permitted
 from reranker import rerank
@@ -16,7 +16,7 @@ from retrieval import hybrid_retrieve
 from sql_rag import sql_rag_chain
 
 logger = logging.getLogger("chat")
-_client: anthropic.Anthropic | None = None
+_client: Groq | None = None
 
 ANALYTICAL_KEYWORDS = (
     "how many", "count", "total", "average", "avg", "sum",
@@ -27,10 +27,10 @@ ANALYTICAL_KEYWORDS = (
 )
 
 
-def get_client() -> anthropic.Anthropic:
+def get_client() -> Groq:
     global _client
     if _client is None:
-        _client = anthropic.Anthropic(api_key=ANTHROPIC_API_KEY)
+        _client = Groq(api_key=GROQ_API_KEY)
     return _client
 
 
@@ -52,12 +52,12 @@ def answer_with_context(question: str, chunks: list[dict]) -> str:
         f"Question: {question}\n\n"
         "Answer:"
     )
-    resp = get_client().messages.create(
+    resp = get_client().chat.completions.create(
         model=LLM_MODEL,
         max_tokens=1024,
         messages=[{"role": "user", "content": prompt}],
     )
-    return resp.content[0].text
+    return resp.choices[0].message.content
 
 
 def orchestrate(question: str, role: str) -> ChatResponse:

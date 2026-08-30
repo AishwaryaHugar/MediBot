@@ -6,12 +6,17 @@ load_dotenv()
 
 BASE_DIR = Path(__file__).parent.parent
 
-ANTHROPIC_API_KEY = os.getenv("ANTHROPIC_API_KEY", "")
+GROQ_API_KEY = os.getenv("GROQ_API_KEY", "")
 QDRANT_URL = os.getenv("QDRANT_URL", "http://localhost:6333")
 QDRANT_API_KEY = os.getenv("QDRANT_API_KEY", None)
-# Set QDRANT_PATH to use local disk storage instead of a running Qdrant server.
-# Example: QDRANT_PATH=./qdrant_db  (relative to project root, no Docker needed)
-QDRANT_PATH = os.getenv("QDRANT_PATH", str(BASE_DIR / "qdrant_db"))
+# Local disk Qdrant path. Relative values are anchored to BASE_DIR (project root)
+# so the same .env works regardless of which subdirectory Python is invoked from.
+_qdrant_path_raw = os.getenv("QDRANT_PATH", "qdrant_db")
+QDRANT_PATH = str(
+    BASE_DIR / _qdrant_path_raw
+    if not os.path.isabs(_qdrant_path_raw)
+    else Path(_qdrant_path_raw)
+)
 SECRET_KEY = os.getenv("SECRET_KEY", "medibot-secret-key-change-in-production")
 DATABASE_PATH = os.getenv("DATABASE_PATH", str(BASE_DIR / "db" / "mediassist.db"))
 
@@ -22,7 +27,7 @@ EMBEDDING_DIM = 384
 SPARSE_DIM = 30000
 TOP_K_RETRIEVAL = 10
 TOP_K_RERANKED = 3
-LLM_MODEL = os.getenv("LLM_MODEL", "claude-sonnet-5")
+LLM_MODEL = os.getenv("LLM_MODEL") or "openai/gpt-oss-120b"
 
 ROLE_COLLECTIONS: dict[str, list[str]] = {
     "doctor": ["clinical", "nursing", "general"],
