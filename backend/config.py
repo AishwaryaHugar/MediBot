@@ -18,7 +18,7 @@ QDRANT_PATH = str(
     else Path(_qdrant_path_raw)
 )
 SECRET_KEY = os.getenv("SECRET_KEY", "medibot-secret-key-change-in-production")
-DATABASE_PATH = os.getenv("DATABASE_PATH", str(BASE_DIR / "db" / "mediassist.db"))
+DATABASE_PATH = os.getenv("DATABASE_PATH") or str(BASE_DIR / "db" / "mediassist.db")
 
 COLLECTION_NAME = "mediassist_docs"
 DENSE_MODEL = "sentence-transformers/all-MiniLM-L6-v2"

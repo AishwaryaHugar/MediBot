@@ -24,6 +24,12 @@ ANALYTICAL_KEYWORDS = (
     "what is the total", "how much", "percentage", "trend",
     "last month", "this year", "breakdown", "statistics",
     "how often", "which department", "top 5", "top 3",
+    # short-form analytical queries
+    "per insurer", "per department", "per status", "per category",
+    "by insurer", "by department", "by status", "by category",
+    "group by", "claims by", "claims per", "tickets per", "tickets by",
+    "open tickets", "open claims", "pending claims", "rejected claims",
+    "approved claims", "denied claims", "how much was", "what is the average",
 )
 
 

@@ -11,6 +11,86 @@ interface Props {
   message: Message;
 }
 
+function renderInline(text: string): React.ReactNode[] {
+  const parts = text.split(/(\*\*[^*]+\*\*)/g);
+  return parts.map((part, i) => {
+    if (part.startsWith("**") && part.endsWith("**")) {
+      return <strong key={i}>{part.slice(2, -2)}</strong>;
+    }
+    return part;
+  });
+}
+
+function MarkdownContent({ text }: { text: string }) {
+  const lines = text.split("\n");
+  const nodes: React.ReactNode[] = [];
+  let i = 0;
+
+  while (i < lines.length) {
+    const line = lines[i];
+
+    // Table block
+    if (line.trimStart().startsWith("|")) {
+      const tableLines: string[] = [];
+      while (i < lines.length && lines[i].trimStart().startsWith("|")) {
+        tableLines.push(lines[i]);
+        i++;
+      }
+      const rows = tableLines.filter((l) => !/^\|[-| :]+\|$/.test(l.trim()));
+      const parseCells = (l: string) =>
+        l.replace(/^\||\|$/g, "").split("|").map((c) => c.trim());
+
+      nodes.push(
+        <div key={nodes.length} className="overflow-x-auto my-2">
+          <table className="w-full text-xs border-collapse">
+            <thead>
+              <tr>
+                {parseCells(rows[0]).map((cell, ci) => (
+                  <th key={ci} className="border border-gray-300 bg-gray-100 px-3 py-1.5 text-left font-semibold">
+                    {renderInline(cell)}
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {rows.slice(1).map((row, ri) => (
+                <tr key={ri} className={ri % 2 === 0 ? "bg-white" : "bg-gray-50"}>
+                  {parseCells(row).map((cell, ci) => (
+                    <td key={ci} className="border border-gray-300 px-3 py-1.5">
+                      {renderInline(cell)}
+                    </td>
+                  ))}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      );
+      continue;
+    }
+
+    // Heading
+    if (line.startsWith("### ")) {
+      nodes.push(<h3 key={nodes.length} className="font-semibold text-sm mt-2">{renderInline(line.slice(4))}</h3>);
+    } else if (line.startsWith("## ")) {
+      nodes.push(<h2 key={nodes.length} className="font-semibold text-sm mt-2">{renderInline(line.slice(3))}</h2>);
+    // List item
+    } else if (/^[-*] /.test(line)) {
+      nodes.push(<li key={nodes.length} className="ml-4 list-disc">{renderInline(line.slice(2))}</li>);
+    // Blank line
+    } else if (line.trim() === "") {
+      nodes.push(<br key={nodes.length} />);
+    // Normal paragraph
+    } else {
+      nodes.push(<p key={nodes.length}>{renderInline(line)}</p>);
+    }
+
+    i++;
+  }
+
+  return <div className="space-y-0.5">{nodes}</div>;
+}
+
 export default function ChatMessage({ message }: Props) {
   const isUser = message.role === "user";
 
@@ -39,8 +119,8 @@ export default function ChatMessage({ message }: Props) {
             </span>
           )}
         </div>
-        <div className="bg-white border border-gray-200 rounded-2xl rounded-tl-sm px-4 py-3 text-sm text-gray-800 shadow-sm whitespace-pre-wrap">
-          {message.content}
+        <div className="bg-white border border-gray-200 rounded-2xl rounded-tl-sm px-4 py-3 text-sm text-gray-800 shadow-sm">
+          <MarkdownContent text={message.content} />
           {res?.sources && <SourceCitation sources={res.sources} />}
         </div>
       </div>
